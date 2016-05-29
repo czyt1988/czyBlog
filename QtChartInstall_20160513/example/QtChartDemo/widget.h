@@ -16,8 +16,16 @@ public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
 
+private slots:
+    void on_pushButton_2axis_clicked();
+
+    void on_pushButton_1Simple_clicked();
+
+    void on_pushButton1_noLegend_clicked();
+
 private:
     Ui::Widget *ui;
+    QChart* m_chart;
 };
 
 #endif // WIDGET_H
