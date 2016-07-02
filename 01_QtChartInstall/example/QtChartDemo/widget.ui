@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>561</width>
+    <width>662</width>
     <height>300</height>
    </rect>
   </property>
@@ -22,6 +22,17 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <widget class="QWidget" name="formLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>170</y>
+        <width>160</width>
+        <height>80</height>
+       </rect>
+      </property>
+      <layout class="QFormLayout" name="formLayout"/>
+     </widget>
     </widget>
    </item>
    <item>
@@ -71,12 +82,26 @@
      <item row="2" column="1">
       <widget class="QPushButton" name="pushButton_2axis">
        <property name="text">
-        <string>2.坐标系创建标题颜色的修改</string>
+        <string>添加另外坐标系</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
       <widget class="QComboBox" name="comboBox_theme"/>
+     </item>
+     <item row="2" column="2">
+      <widget class="QPushButton" name="pushButton_addBar">
+       <property name="text">
+        <string>添加bar</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QPushButton" name="pushButton_clear">
+       <property name="text">
+        <string>清除所有图表</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

@@ -1,13 +1,17 @@
-﻿#include "widget.h"
+#include "widget.h"
 #include "ui_widget.h"
 #include <QLineSeries>
+#include <QComboBox>
 #include <math.h>
+#include <QBarSeries>
+#include <QBarSet>
+#include <QTime>
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
+  ,m_chart(new QChart())
 {
     ui->setupUi(this);
-    m_chart = new QChart();
     ui->chart->setChart(m_chart);
     ui->checkBox_legend->setChecked(true);
     ui->comboBox_theme->addItem("Light", QChart::ChartThemeLight);
@@ -18,6 +22,9 @@ Widget::Widget(QWidget *parent) :
     ui->comboBox_theme->addItem("High Contrast", QChart::ChartThemeHighContrast);
     ui->comboBox_theme->addItem("Blue Icy", QChart::ChartThemeBlueIcy);
     ui->comboBox_theme->addItem("Qt", QChart::ChartThemeQt);
+    ui->comboBox_theme->setCurrentIndex(-1);
+    connect(ui->comboBox_theme,static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged)
+            ,this,&Widget::on_comboThemeIndexChanged);
     connect(ui->checkBox_legend,&QAbstractButton::clicked,this,[&](bool v){
         m_chart->legend()->setVisible(v);
     });
@@ -33,6 +40,11 @@ Widget::Widget(QWidget *parent) :
     connect(ui->pushButton_legendRight,&QAbstractButton::clicked,this,[&](){
         m_chart->legend()->setAlignment(Qt::AlignRight);
     });
+    connect(ui->pushButton_addBar,&QAbstractButton::clicked,this,&Widget::on_pushButton_2axis_clicked);
+    connect(ui->pushButton_clear,&QAbstractButton::clicked,this,&Widget::on_pushButton_clear);
+
+
+    m_chart->setTitle(tr("简单的QtChart示例"));
 }
 Widget::~Widget()
 {
@@ -41,20 +53,20 @@ Widget::~Widget()
 
 void Widget::on_pushButton_1Simple_clicked()
 {
-    m_chart->removeAllSeries();
+    static int s_line_count = 0;
+    ++s_line_count;
     QLineSeries* line1 = new QLineSeries();
-    QLineSeries* line2 = new QLineSeries();
-    for(double x=0;x<10;x+=0.1)
+    const int size = 1000;
+    std::vector<double> v1;
+    randData(size,v1);
+    for(int i=0;i<size;++i)
     {
-        line1->append(x,sin(x));
-        line2->append(x*10,cos(x*10));
+        line1->append(double(i),v1[i]);
     }
-    line1->setName(QStringLiteral("我是一个正弦函数[0~10]"));
-    line2->setName(QStringLiteral("我是一个余弦函数[0~100]"));
+    line1->setName( tr("随机数曲线") + QString::number(s_line_count) );
     m_chart->addSeries(line1);
-    m_chart->addSeries(line2);
     m_chart->createDefaultAxes();
-    m_chart->setTitle(QStringLiteral("简单的QtChart示例"));
+
 }
 
 
@@ -69,4 +81,54 @@ void Widget::on_pushButton_2axis_clicked()
 void Widget::on_pushButton1_noLegend_clicked()
 {
     m_chart->legend()->hide();
+}
+
+void Widget::on_comboThemeIndexChanged(int index)
+{
+    if(!m_chart)
+        return;
+    if(index<0)
+        return;
+    QVariant var = ui->comboBox_theme->currentData();
+    if(!var.isValid())
+        return;
+    QChart::ChartTheme theme = static_cast<QChart::ChartTheme>(var.value<int>());
+    m_chart->setTheme(theme);
+    m_chart->update();
+}
+
+void Widget::on_pushButton_addBar()
+{
+    static int s_bar_count = 0;
+    ++s_bar_count;
+    QBarSeries* bar = new QBarSeries();
+    std::vector<double> val;
+    for(double x=0;x<10;++x)
+    {
+        val.clear();
+        randData(3,val);
+        QBarSet* setData = new QBarSet(QString("%1").arg(x));
+        bar->append(setData);
+    }
+    bar->setName(tr("bar示例%1").arg(s_bar_count));
+    m_chart->addSeries(bar);
+    m_chart->createDefaultAxes();
+}
+
+void Widget::on_pushButton_clear()
+{
+    m_chart->removeAllSeries();
+}
+
+void Widget::randData(int size,std::vector<double>& data) const
+{
+    QTime time;
+    time= QTime::currentTime();
+    qsrand(time.msec()+time.second()*1000);
+    int val;
+    for(int i=0;i<size;++i)
+    {
+        val = qrand();
+        data.push_back(double(val)/double(RAND_MAX));
+    }
 }
