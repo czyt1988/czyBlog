@@ -75,7 +75,7 @@
 
 
 此时生成的文件如下：
-![](4fbc2d3e-80a1-4237-a203-8be13ec944c6_128_files/17b724fa-77cd-48e9-a572-6c436fb51353.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/03_QDataStream/pic/02.png)
 
 但前面的`00 00 01 00`是什么东西？
 
@@ -117,8 +117,11 @@ Qt还有`int QDataStream::writeRawData(const char * s, int len)`和`int QDataStr
     }
 
 上面代码输出：
-![](4fbc2d3e-80a1-4237-a203-8be13ec944c6_128_files/c8c4aa03-77a0-438e-bdb0-59d14b52832a.jpg)
+
+![](https://github.com/czyt1988/czyBlog/raw/master/03_QDataStream/pic/03.png)
 
 生成的文件为：
-![](4fbc2d3e-80a1-4237-a203-8be13ec944c6_128_files/f9d0c46c-be09-4d1d-be28-62e2205f4a96.png)
+
+![](https://github.com/czyt1988/czyBlog/raw/master/03_QDataStream/pic/04.png)
+
 就是我们想要的不加各种乱七八糟的头尾的原始二进制了
