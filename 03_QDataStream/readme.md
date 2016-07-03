@@ -29,7 +29,7 @@
 
 显示的效果：
 
-![](4fbc2d3e-80a1-4237-a203-8be13ec944c6_128_files/697d3ca1-a39d-4752-a602-b568e2c0f119.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/03_QDataStream/pic/01.png)
 
 
 这样很明显不会得到想要的效果，因为`QDataStream`遇到`\0`就自动结束了。而且前面还加了一些其他的内容。会有 `00 00 00 19` （t的ASCII为74）
