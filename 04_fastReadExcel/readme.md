@@ -1,4 +1,4 @@
 #Qt Windows 下快速读写Excel指南
-很多人搜如何读写excel都会看到用QAxObject来进行操作，很多人试了之后都会发现一个问题，就是慢，非常缓慢！因此很多人得出结论是QAxObject读写excel方法不可取，效率低。
+很多人搜如何读写excel都会看到用`QAxObject`来进行操作，很多人试了之后都会发现一个问题，就是慢，非常缓慢！因此很多人得出结论是`QAxObject`读写excel方法不可取，效率低。
 后来我曾试过用ODBC等数据库类型的接口进行读写，遇到中文嗝屁不说，超大的excel还是会读取速度慢。
-最后，看了一些开源的代码后发现，Windows下读些excel，还是用QAxObject最快！没错，就是用QAxObject读写最快！！！
+最后，看了一些开源的代码后发现，Windows下读些excel，还是用`QAxObject`最快！没错，就是用`QAxObject`读写最快！！！
