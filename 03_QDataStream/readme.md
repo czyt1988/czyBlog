@@ -1,7 +1,11 @@
 #QDataStream  writeBytes与writeRawData区别
 
-序列化文件时一般会遇到写文件头问题。例如需要写一个固定大小的char[256]，无论有没有遇到`\0`都要写入char[256]内容，Qt下使用`QDataStream`是非常容易炒作文件读写的，但在写这个固定长度的char数组时还是遇到了一些小问题
-下面就讨论怎么样很好的把这片区域填充：
+有次序列化文件时，要求需要写一个固定大小的char[256]，无论有没有遇到`\0`都要写入char[256]内容，Qt下使用`QDataStream`是非常容易操作文件读写的，但，在写这个固定长度的char数组时还是遇到了一些小问题。
+
+下面就讨论怎么样很好的把固定的char[256]这片区域写到文件中：
+
+`QDataStream`有流式操作`<<`，对文件操作非常方便
+
 首先看看最常见的流输出：
 
     void demo1(QFile& file)
@@ -76,12 +80,14 @@
 
 此时生成的文件如下：
 ![](https://github.com/czyt1988/czyBlog/raw/master/03_QDataStream/pic/02.png)
-
-但前面的`00 00 01 00`是什么东西？
+这时候，发现能完整的把char[256]写入到文件中，但前面的`00 00 01 00`是什么东西？
 
 注意，使用`writeBytes`函数写的文件，必须用`readBytes`函数读取，`readBytes`函数是个工厂函数，会调用`new[]`分配内存，因此需要调用`delete[]` 进行删除内存，否则会泄露。
 
-Qt还有`int QDataStream::writeRawData(const char * s, int len)`和`int QDataStream::readRawData(char * s, int len)`函数写入最原始的内存，如果不想要Qt独有的一些信息，就需要用这两个函数了：
+之前说的`00 00 01 00`是Qt特有的标示，用于Qt自身的验证，但要写一个通用点的文件，可以让别的环境也能很轻松的读取，需要用到另外一个函数`int QDataStream::writeRawData(const char * s, int len)`
+
+
+`int QDataStream::writeRawData(const char * s, int len)`和`int QDataStream::readRawData(char * s, int len)`函数配对使用，用于写入最原始的内存，如果不想要Qt独有的一些信息，就需要用这两个函数了：
 
     void demo3QDataStream(QFile& file)
     {
@@ -125,3 +131,7 @@ Qt还有`int QDataStream::writeRawData(const char * s, int len)`和`int QDataStr
 ![](https://github.com/czyt1988/czyBlog/raw/master/03_QDataStream/pic/04.png)
 
 就是我们想要的不加各种乱七八糟的头尾的原始二进制了
+
+#总结
+
+在写出二进制时，如果需要仅仅写入原始的内存，记得使用`int QDataStream::writeRawData(const char * s, int len)`函数，而不是`QDataStream::writeBytes`函数！

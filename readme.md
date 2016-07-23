@@ -1,3 +1,7 @@
-#简介
-创建时间：2016年05月13号
-为了更好的管理我的blog，以后所有的blog文章及demo代码什么的都放置在这里
+#Qt
+## 数据绘图相关
+[Qt5.7以下QtChart配置](https://github.com/czyt1988/czyBlog/tree/master/01_QtChartInstall)
+## IO相关
+[QDataStream writeBytes与writeRawData区别](https://github.com/czyt1988/czyBlog/tree/master/03_QDataStream)
+
+[Windows下快速读取Excel](https://github.com/czyt1988/czyBlog/tree/master/04_fastReadExcel)
