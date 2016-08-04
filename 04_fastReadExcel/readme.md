@@ -82,7 +82,7 @@ void ExcelBase::castVariant2ListListVariant(const QVariant &var, QList<QList<QVa
 }
 ```
 
-这样excel的所有内容都转换为QList<QList<QVariant> >保存，其中`QList<QList<QVariant> >`中`QList<QVariant>`为每行的内容，行按顺序放入最外围的QList中。
+这样excel的所有内容都转换为`QList<QList<QVariant> >`保存，其中`QList<QList<QVariant> >`中`QList<QVariant>`为每行的内容，行按顺序放入最外围的QList中。
 
 对于如下如的excel
 
@@ -271,5 +271,5 @@ void MainWindow::on_action_write_triggered()
 
 [--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/04_fastReadExcel)
 
-
+![](https://github.com/czyt1988/czyBlog/raw/master/04_fastReadExcel/pic/01.png)
 
