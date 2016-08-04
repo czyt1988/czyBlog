@@ -7,20 +7,21 @@
 #读取excel慢的原因
 这里不说如何打开或生成excel，着重说说如何快速读取excel。
 网上搜到用Qt操作excel的方法，读取都是使用类似下面这种方法进行：
-`C++
-	QVariant ExcelBase::read(int row, int col)
-	{
-	    QVariant ret;
-	    if (this->sheet != NULL && ! this->sheet->isNull())
-	    {
-	        QAxObject* range = this->sheet->querySubObject("Cells(int, int)", row, col);
-	        //ret = range->property("Value");
-	        ret = range->dynamicCall("Value()");
-	        delete range;
-	    }
-	    return ret;
-	}
-`
+
+```C++
+QVariant ExcelBase::read(int row, int col)
+{
+    QVariant ret;
+    if (this->sheet != NULL && ! this->sheet->isNull())
+    {
+        QAxObject* range = this->sheet->querySubObject("Cells(int, int)", row, col);
+        //ret = range->property("Value");
+        ret = range->dynamicCall("Value()");
+        delete range;
+    }
+    return ret;
+}
+```
 
 读取慢的根源就在于`sheet->querySubObject("Cells(int, int)", row, col)`
 
@@ -36,45 +37,50 @@ VBA中可以使用`UsedRange`把所有用到的单元格范围返回，并使用
 
 先看看获取整个单元格的函数示意(这里ExcelBase是一个读写excel的类封装)：
 
-	QVariant ExcelBase::readAll()
-	{
-	    QVariant var;
-	    if (this->sheet != NULL && ! this->sheet->isNull())
-	    {
-	        QAxObject *usedRange = this->sheet->querySubObject("UsedRange");
-	        if(NULL == usedRange || usedRange->isNull())
-	        {
-	            return var;
-	        }
-	        var = usedRange->dynamicCall("Value");
-	        delete usedRange;
-	    }
-	    return var;
-	}
+```C++
+QVariant ExcelBase::readAll()
+{
+    QVariant var;
+    if (this->sheet != NULL && ! this->sheet->isNull())
+    {
+        QAxObject *usedRange = this->sheet->querySubObject("UsedRange");
+        if(NULL == usedRange || usedRange->isNull())
+        {
+            return var;
+        }
+        var = usedRange->dynamicCall("Value");
+        delete usedRange;
+    }
+    return var;
+}
+```
+
 代码中`this->sheet`是已经打开的一个sheet，再获取内容时使用`this->sheet->querySubObject("UsedRange");`即可把所有范围都获取。
 
 下面这个castVariant2ListListVariant函数把`QVariant`转换为`QList<QList<QVariant> >`
 	
-	///
-	/// \brief 把QVariant转为QList<QList<QVariant> >
-	/// \param var
-	/// \param res
-	///
-	void ExcelBase::castVariant2ListListVariant(const QVariant &var, QList<QList<QVariant> > &res)
-	{
-	    QVariantList varRows = var.toList();
-	    if(varRows.isEmpty())
-	    {
-	        return;
-	    }
-	    const int rowCount = varRows.size();
-	    QVariantList rowData;
-	    for(int i=0;i<rowCount;++i)
-	    {
-	        rowData = varRows[i].toList();
-	        res.push_back(rowData);
-	    }
-	}
+```C++
+///
+/// \brief 把QVariant转为QList<QList<QVariant> >
+/// \param var
+/// \param res
+///
+void ExcelBase::castVariant2ListListVariant(const QVariant &var, QList<QList<QVariant> > &res)
+{
+    QVariantList varRows = var.toList();
+    if(varRows.isEmpty())
+    {
+        return;
+    }
+    const int rowCount = varRows.size();
+    QVariantList rowData;
+    for(int i=0;i<rowCount;++i)
+    {
+        rowData = varRows[i].toList();
+        res.push_back(rowData);
+    }
+}
+```
 
 这样excel的所有内容都转换为QList<QList<QVariant> >保存，其中`QList<QList<QVariant> >`中`QList<QVariant>`为每行的内容，行按顺序放入最外围的QList中。
 
@@ -92,32 +98,36 @@ VBA中可以使用`UsedRange`把所有用到的单元格范围返回，并使用
 这里有个excel，有1000行，100列，共计十万单元格，打开使用了一些时间，读取10万单元格耗时229毫秒，
 读取的代码如下：(完整源代码见后面)
 
-	void MainWindow::on_action_open_triggered()
-	{
-	    QString xlsFile = QFileDialog::getOpenFileName(this,QString(),QString(),"excel(*.xls *.xlsx)");
-	    if(xlsFile.isEmpty())
-	        return;
-	    QElapsedTimer timer;
-	    timer.start();
-	    if(m_xls.isNull())
-	        m_xls.reset(new ExcelBase);
-	    m_xls->open(xlsFile);
-	    qDebug()<<"open cost:"<<timer.elapsed()<<"ms";timer.restart();
-	    m_xls->setCurrentSheet(1);
-	    m_xls->readAll(m_datas);
-	    qDebug()<<"read data cost:"<<timer.elapsed()<<"ms";timer.restart();
-	    QVariantListListModel* md = qobject_cast<QVariantListListModel*>(ui->tableView->model());
-	    if(md)
-	    {
-	        md->updateData();
-	    }
-	    qDebug()<<"show data cost:"<<timer.elapsed()<<"ms";timer.restart();
-	}
+```C++
+void MainWindow::on_action_open_triggered()
+{
+    QString xlsFile = QFileDialog::getOpenFileName(this,QString(),QString(),"excel(*.xls *.xlsx)");
+    if(xlsFile.isEmpty())
+        return;
+    QElapsedTimer timer;
+    timer.start();
+    if(m_xls.isNull())
+        m_xls.reset(new ExcelBase);
+    m_xls->open(xlsFile);
+    qDebug()<<"open cost:"<<timer.elapsed()<<"ms";timer.restart();
+    m_xls->setCurrentSheet(1);
+    m_xls->readAll(m_datas);
+    qDebug()<<"read data cost:"<<timer.elapsed()<<"ms";timer.restart();
+    QVariantListListModel* md = qobject_cast<QVariantListListModel*>(ui->tableView->model());
+    if(md)
+    {
+        md->updateData();
+    }
+    qDebug()<<"show data cost:"<<timer.elapsed()<<"ms";timer.restart();
+}
+```
 
 上面的m_xls和m_datas是成员变量：
 
-    QScopedPointer<ExcelBase> m_xls;
-    QList< QList<QVariant> > m_datas;
+```C++
+QScopedPointer<ExcelBase> m_xls;
+QList< QList<QVariant> > m_datas;
+```
 
 读取的耗时：
 
@@ -137,106 +147,111 @@ VBA中可以使用`UsedRange`把所有用到的单元格范围返回，并使用
 
 要写入这个范围，同样也是通过一个与之对应的`QList<QList<QVariant> >`，具体见下面代码：
 
-
-	///
-	/// \brief 写入一个表格内容
-	/// \param cells
-	/// \return 成功写入返回true
-	/// \see readAllSheet
-	///
-	bool ExcelBase::writeCurrentSheet(const QList<QList<QVariant> > &cells)
-	{
-	    if(cells.size() <= 0)
-	        return false;
-	    if(NULL == this->sheet || this->sheet->isNull())
-	        return false;
-	    int row = cells.size();
-	    int col = cells.at(0).size();
-	    QString rangStr;
-	    convertToColName(col,rangStr);
-	    rangStr += QString::number(row);
-	    rangStr = "A1:" + rangStr;
-	    qDebug()<<rangStr;
-	    QAxObject *range = this->sheet->querySubObject("Range(const QString&)",rangStr);
-	    if(NULL == range || range->isNull())
-	    {
-	        return false;
-	    }
-	    bool succ = false;
-	    QVariant var;
-	    castListListVariant2Variant(cells,var);
-	    succ = range->setProperty("Value", var);
-	    delete range;
-	    return succ;
-	}
+```C++
+///
+/// \brief 写入一个表格内容
+/// \param cells
+/// \return 成功写入返回true
+/// \see readAllSheet
+///
+bool ExcelBase::writeCurrentSheet(const QList<QList<QVariant> > &cells)
+{
+    if(cells.size() <= 0)
+        return false;
+    if(NULL == this->sheet || this->sheet->isNull())
+        return false;
+    int row = cells.size();
+    int col = cells.at(0).size();
+    QString rangStr;
+    convertToColName(col,rangStr);
+    rangStr += QString::number(row);
+    rangStr = "A1:" + rangStr;
+    qDebug()<<rangStr;
+    QAxObject *range = this->sheet->querySubObject("Range(const QString&)",rangStr);
+    if(NULL == range || range->isNull())
+    {
+        return false;
+    }
+    bool succ = false;
+    QVariant var;
+    castListListVariant2Variant(cells,var);
+    succ = range->setProperty("Value", var);
+    delete range;
+    return succ;
+}
+```
 
 此函数是把数据从A1开始写
 
 函数中的`convertToColName`为把列数，转换为excel中用字母表示的列数，这个函数是用递归来实现的：
 
-	///
-	/// \brief 把列数转换为excel的字母列号
-	/// \param data 大于0的数
-	/// \return 字母列号，如1->A 26->Z 27 AA
-	///
-	void ExcelBase::convertToColName(int data, QString &res)
-	{
-	    Q_ASSERT(data>0 && data<65535);
-	    int tempData = data / 26;
-	    if(tempData > 0)
-	    {
-	        int mode = data % 26;
-	        convertToColName(mode,res);
-	        convertToColName(tempData,res);
-	    }
-	    else
-	    {
-	        res=(to26AlphabetString(data)+res);
-	    }
-	}
-	///
-	/// \brief 数字转换为26字母
-	///
-	/// 1->A 26->Z
-	/// \param data
-	/// \return
-	///
-	QString ExcelBase::to26AlphabetString(int data)
-	{
-	    QChar ch = data + 0x40;//A对应0x41
-	    return QString(ch);
-	}
+```C++
+///
+/// \brief 把列数转换为excel的字母列号
+/// \param data 大于0的数
+/// \return 字母列号，如1->A 26->Z 27 AA
+///
+void ExcelBase::convertToColName(int data, QString &res)
+{
+    Q_ASSERT(data>0 && data<65535);
+    int tempData = data / 26;
+    if(tempData > 0)
+    {
+        int mode = data % 26;
+        convertToColName(mode,res);
+        convertToColName(tempData,res);
+    }
+    else
+    {
+        res=(to26AlphabetString(data)+res);
+    }
+}
+///
+/// \brief 数字转换为26字母
+///
+/// 1->A 26->Z
+/// \param data
+/// \return
+///
+QString ExcelBase::to26AlphabetString(int data)
+{
+    QChar ch = data + 0x40;//A对应0x41
+    return QString(ch);
+}
+```
 
 看看写excel的耗时：
 
-	void MainWindow::on_action_write_triggered()
-	{
-	    QString xlsFile = QFileDialog::getExistingDirectory(this);
-	    if(xlsFile.isEmpty())
-	        return;
-	    xlsFile += "/excelRWByCztr1988.xls";
-	    QElapsedTimer timer;
-	    timer.start();
-	    if(m_xls.isNull())
-	        m_xls.reset(new ExcelBase);
-	    m_xls->create(xlsFile);
-	    qDebug()<<"create cost:"<<timer.elapsed()<<"ms";timer.restart();
-	    QList< QList<QVariant> > m_datas;
-	    for(int i=0;i<1000;++i)
-	    {
-	        QList<QVariant> rows;
-	        for(int j=0;j<100;++j)
-	        {
-	            rows.append(i*j);
-	        }
-	        m_datas.append(rows);
-	    }
-	    m_xls->setCurrentSheet(1);
-	    timer.restart();
-	    m_xls->writeCurrentSheet(m_datas);
-	    qDebug()<<"write cost:"<<timer.elapsed()<<"ms";timer.restart();
-	    m_xls->save();
-	}
+```C++
+void MainWindow::on_action_write_triggered()
+{
+    QString xlsFile = QFileDialog::getExistingDirectory(this);
+    if(xlsFile.isEmpty())
+        return;
+    xlsFile += "/excelRWByCztr1988.xls";
+    QElapsedTimer timer;
+    timer.start();
+    if(m_xls.isNull())
+        m_xls.reset(new ExcelBase);
+    m_xls->create(xlsFile);
+    qDebug()<<"create cost:"<<timer.elapsed()<<"ms";timer.restart();
+    QList< QList<QVariant> > m_datas;
+    for(int i=0;i<1000;++i)
+    {
+        QList<QVariant> rows;
+        for(int j=0;j<100;++j)
+        {
+            rows.append(i*j);
+        }
+        m_datas.append(rows);
+    }
+    m_xls->setCurrentSheet(1);
+    timer.restart();
+    m_xls->writeCurrentSheet(m_datas);
+    qDebug()<<"write cost:"<<timer.elapsed()<<"ms";timer.restart();
+    m_xls->save();
+}
+```
 
 输出：
 
@@ -254,7 +269,7 @@ VBA中可以使用`UsedRange`把所有用到的单元格范围返回，并使用
 
 #源代码
 
-[--> github ](https://github.com/czyt1988/czyBlog/tree/master/04_fastReadExcel)
+[--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/04_fastReadExcel)
 
 
 
