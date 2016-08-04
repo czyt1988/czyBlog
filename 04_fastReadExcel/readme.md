@@ -7,7 +7,7 @@
 #读取excel慢的原因
 这里不说如何打开或生成excel，着重说说如何快速读取excel。
 网上搜到用Qt操作excel的方法，读取都是使用类似下面这种方法进行：
-
+`C++
 	QVariant ExcelBase::read(int row, int col)
 	{
 	    QVariant ret;
@@ -20,6 +20,7 @@
 	    }
 	    return ret;
 	}
+`
 
 读取慢的根源就在于`sheet->querySubObject("Cells(int, int)", row, col)`
 
@@ -253,6 +254,7 @@ VBA中可以使用`UsedRange`把所有用到的单元格范围返回，并使用
 
 #源代码
 
+[--> github ](https://github.com/czyt1988/czyBlog/tree/master/04_fastReadExcel)
 
 
 
