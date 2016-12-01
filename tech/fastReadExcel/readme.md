@@ -86,13 +86,13 @@ void ExcelBase::castVariant2ListListVariant(const QVariant &var, QList<QList<QVa
 
 对于如下如的excel
 
-![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/02_0.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/fastReadExcel/pic/02_0.png)
 
 读取后的`QList<QList<QVariant> >`结构如下所示：
 
-![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/02.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/fastReadExcel/pic/02.png)
 
-![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/03.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/fastReadExcel/pic/03.png)
 
 下面看看此excel的读取速度有多高
 这里有个excel，有1000行，100列，共计十万单元格，打开使用了一些时间，读取10万单元格耗时229毫秒，
@@ -269,7 +269,7 @@ void MainWindow::on_action_write_triggered()
 
 #源代码
 
-[--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/fastReadExcel)
+[--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/tech/fastReadExcel)
 
-![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/01.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/fastReadExcel/pic/01.png)
 
