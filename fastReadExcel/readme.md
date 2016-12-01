@@ -86,13 +86,13 @@ void ExcelBase::castVariant2ListListVariant(const QVariant &var, QList<QList<QVa
 
 对于如下如的excel
 
-![](https://github.com/czyt1988/czyBlog/raw/master/04_fastReadExcel/pic/02_0.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/02_0.png)
 
 读取后的`QList<QList<QVariant> >`结构如下所示：
 
-![](https://github.com/czyt1988/czyBlog/raw/master/04_fastReadExcel/pic/02.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/02.png)
 
-![](https://github.com/czyt1988/czyBlog/raw/master/04_fastReadExcel/pic/03.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/03.png)
 
 下面看看此excel的读取速度有多高
 这里有个excel，有1000行，100列，共计十万单元格，打开使用了一些时间，读取10万单元格耗时229毫秒，
@@ -131,7 +131,7 @@ QList< QList<QVariant> > m_datas;
 
 读取的耗时：
 
-	"D:\czy_blog\czyBlog\04_fastReadExcel\src\fastReadExcelInWindows\excelRWByCztr1988.xls"
+	"D:\czy_blog\czyBlog\fastReadExcel\src\fastReadExcelInWindows\excelRWByCztr1988.xls"
 	open cost: 1183 ms
 	read data cost: 229 ms
 	show data cost: 14 ms
@@ -269,7 +269,7 @@ void MainWindow::on_action_write_triggered()
 
 #源代码
 
-[--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/04_fastReadExcel)
+[--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/fastReadExcel)
 
-![](https://github.com/czyt1988/czyBlog/raw/master/04_fastReadExcel/pic/01.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/fastReadExcel/pic/01.png)
 
