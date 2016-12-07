@@ -3,9 +3,13 @@
 功能封装的还是不错，提供了3种模式，线形、圆环、饼状。使用过程中发现圆环进度条对背景透明支持不够完善，内圆的背景无法实现透明，为了解决此问题，下面对此控件进行了一些修订，实现完整的圆形进度条。
 
 #QRoundProgressBar目前存在的不足
+
 ![](https://github.com/czyt1988/czyBlog/raw/master/tech/QRoundBarFix/pic/0.png)
+
 QRoundProgressBar在带背景图片widget下使用StyleDonut样式时，内环背景无法透明
+
 ![](https://github.com/czyt1988/czyBlog/raw/master/tech/QRoundBarFix/pic/1.gif)
+
 代码如下：
 头文件:
 ```cpp
@@ -122,6 +126,7 @@ void QRoundProgressBar::drawValue(QPainter &p, const QRectF &baseRect, double va
 因此。在绘制圆环时需要特殊对待，`QPainterPath`在画圆环时把圆环填充。
 
 ## 改进
+
 这里需要把原来的`drawValue`函数进行修正，原来`drawValue`函数对绘制pie和绘制Donut styles是一样处理，这里修正为pie就画pie，画Donut styles就画圆环：
 为了绘制圆环，`drawValue`函数需添加两个变量，是内环的对应的矩形和半径
 ```cpp
@@ -168,12 +173,12 @@ void QRoundProgressBar::drawValue(QPainter &p
     {
         // draw dount outer
         QPointF currentPoint = dataPath.currentPosition();//绘制完外圆弧长后，获取绘制完的位置绘制一个直线到达内圆
-        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * 0.75);//计算内圆的坐标点，0.75是作者定义的一个数值，内圆是外圆的0.75倍，吐槽这里为啥不改为一个变量实现可变……
+        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * m_innerOuterRate;//计算内圆的坐标点，m_innerOuterRate替代了原作者写的0.75，代表内圆是外圆的0.75倍
         dataPath.lineTo(currentPoint);//绘制外圆到内圆的直线
         dataPath.moveTo(baseRect.center());//坐标点回到中心准备绘制内圆弧形
         dataPath.arcTo(innerRect, m_nullPosition-arcLength, arcLength);//绘制内圆的弧形
         currentPoint = dataPath.currentPosition();//准备绘制内圆到外圆的直线，形成封闭区域
-        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * 1.25);//绘制内圆到外圆的直线，1.25是对应0.75的，这里最好改为一个变量，实现可变的接口
+        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * (2-m_innerOuterRate));//绘制内圆到外圆的直线，这里2-m_innerOuterRate其实是对应(1 + (1 -m_innerOuterRate))的
         dataPath.lineTo(currentPoint);
         p.setPen(Qt::NoPen);//这个很重要不然就会有绘制过程的一些轮廓了
     }
@@ -183,7 +188,10 @@ void QRoundProgressBar::drawValue(QPainter &p
 ```
 具体过程见代码的注释。
 
+这里作者把内圆直径定死为外圆的0.75倍，我觉得这样失去了灵活性，因此加入了一个float变量，m_innerOuterRate，默认为0.75，替代原来的0.75常数，并加入方法`float innerOuterRate() const`和`void setInnerOuterRate(float r)`进行设置
+
 原来的`paintEvent`函数的函数顺序也需要改变：
+
 下面是原来的paintEvent函数：
 ```cpp
 void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
@@ -226,7 +234,9 @@ void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
     painter.drawImage(0,0, buffer);
 }
 ```
-修改为：
+
+原来作者使用了QImage作为缓存，但qt自带双缓冲，这一步没有必要(用QImage时在ubuntu还有小问题，在控件比较小时(200*200以下)会出现花屏现象，原因未知),修改为：
+
 ```cpp
 
 void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
@@ -234,16 +244,14 @@ void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
     double outerRadius = qMin(width(), height());
     QRectF baseRect(1, 1, outerRadius-2, outerRadius-2);
 
-    QImage buffer(outerRadius, outerRadius, QImage::Format_ARGB32_Premultiplied);
-
-    QPainter p(&buffer);
+    QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
     // data brush
     rebuildDataBrushIfNeeded();
 
     // background
-    drawBackground(p, buffer.rect());
+    drawBackground(p, rect());
     double innerRadius(0);
     QRectF innerRect;
     calculateInnerRect(baseRect, outerRadius, innerRect, innerRadius);
@@ -264,14 +272,13 @@ void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
 
     // finally draw the bar
     p.end();
-
-    QPainter painter(this);
-    painter.fillRect(baseRect, palette().background());
-    painter.drawImage(0,0, buffer);
 }
 ```
-主要是把`calculateInnerRect(baseRect, outerRadius, innerRect, innerRadius);`函数提前计算出内圆对应的参数。并传入给新修改的`drawValue`函数。
+
+主要是把`calculateInnerRect(baseRect, outerRadius, innerRect, innerRadius);`函数提前计算出内圆对应的参数。并传入给新修改的`drawValue`函数。把多余的双缓冲机制去掉.
+
 此时效果还未达到需求的效果，发现`drawBase`函数还需要修改，原来的`drawBase`函数如下：
+
 ```cpp
 void QRoundProgressBar::drawBase(QPainter &p, const QRectF &baseRect)
 {
@@ -299,7 +306,9 @@ void QRoundProgressBar::drawBase(QPainter &p, const QRectF &baseRect)
     }
 }
 ```
+
 上面的`drawBase`函数可见，由于原作者比较懒，对于Donut styles模式就直接画了一个外圆，并不是一个空心圆环，改进如下：
+
 ```cpp
 void QRoundProgressBar::drawBase(QPainter &p, const QRectF &baseRect,const QRectF &innerRect)
 {
@@ -333,7 +342,9 @@ void QRoundProgressBar::drawBase(QPainter &p, const QRectF &baseRect,const QRect
 }
 ```
 最后运行效果：
+
 ![](https://github.com/czyt1988/czyBlog/raw/master/tech/QRoundBarFix/pic/2.gif)
+
 代码见:[czyt1988的github](https://github.com/czyt1988/czyBlog/tree/master/tech/QRoundBarFix)
 
 

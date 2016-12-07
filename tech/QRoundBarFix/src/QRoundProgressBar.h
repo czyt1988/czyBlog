@@ -179,6 +179,9 @@ public:
      */
     double maximum() const { return m_max; }
 
+    float innerOuterRate() const;
+    void setInnerOuterRate(float innerOuterRate);
+
 public Q_SLOTS:
     /**
      * @brief Defines minimum und maximum of the allowed value range.
@@ -233,7 +236,7 @@ protected:
 
     double m_min, m_max;
     double m_value;
-
+    float m_innerOuterRate;///< 内径比外径，这里m_innerOuterRate应该小于1
     double m_nullPosition;
     BarStyle m_barStyle;
     double m_outlinePenWidth, m_dataPenWidth;

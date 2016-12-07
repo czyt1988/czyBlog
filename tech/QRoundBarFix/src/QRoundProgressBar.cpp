@@ -1,5 +1,5 @@
 /*
- * QRoundProgressBar - a circular progress bar Qt widget.
+ * DRoundProgressBar - a circular progress bar Qt widget.
  *
  * Sintegrial Technologies (c) 2015-now
  *
@@ -26,6 +26,7 @@ QRoundProgressBar::QRoundProgressBar(QWidget *parent) :
     QWidget(parent),
     m_min(0), m_max(100),
     m_value(25),
+    m_innerOuterRate(0.75),
     m_nullPosition(PositionTop),
     m_barStyle(StyleDonut),
     m_outlinePenWidth(1),
@@ -172,16 +173,14 @@ void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
     double outerRadius = qMin(width(), height());
     QRectF baseRect(1, 1, outerRadius-2, outerRadius-2);
 
-    QImage buffer(outerRadius, outerRadius, QImage::Format_ARGB32_Premultiplied);
-
-    QPainter p(&buffer);
+    QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
     // data brush
     rebuildDataBrushIfNeeded();
 
     // background
-    drawBackground(p, buffer.rect());
+    drawBackground(p, rect());
     double innerRadius(0);
     QRectF innerRect;
     calculateInnerRect(baseRect, outerRadius, innerRect, innerRadius);
@@ -202,10 +201,6 @@ void QRoundProgressBar::paintEvent(QPaintEvent* /*event*/)
 
     // finally draw the bar
     p.end();
-
-    QPainter painter(this);
-    painter.fillRect(baseRect, palette().background());
-    painter.drawImage(0,0, buffer);
 }
 
 void QRoundProgressBar::drawBackground(QPainter &p, const QRectF &baseRect)
@@ -284,12 +279,12 @@ void QRoundProgressBar::drawValue(QPainter &p
     {
         // draw dount outer
         QPointF currentPoint = dataPath.currentPosition();
-        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * 0.75);
+        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * m_innerOuterRate);
         dataPath.lineTo(currentPoint);
         dataPath.moveTo(baseRect.center());
         dataPath.arcTo(innerRect, m_nullPosition-arcLength, arcLength);
         currentPoint = dataPath.currentPosition();
-        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * 1.25);
+        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * (2-m_innerOuterRate));
         dataPath.lineTo(currentPoint);
         p.setPen(Qt::NoPen);
     }
@@ -306,7 +301,7 @@ void QRoundProgressBar::calculateInnerRect(const QRectF &/*baseRect*/, double ou
     }
     else    // for Pie and Donut styles
     {
-        innerRadius = outerRadius * 0.75;
+        innerRadius = outerRadius * m_innerOuterRate;
     }
 
     double delta = (outerRadius - innerRadius) / 2;
@@ -396,6 +391,16 @@ void QRoundProgressBar::rebuildDataBrushIfNeeded()
         setPalette(p);
     }
 }
+float QRoundProgressBar::innerOuterRate() const
+{
+    return m_innerOuterRate;
+}
+
+void QRoundProgressBar::setInnerOuterRate(float innerOuterRate)
+{
+    m_innerOuterRate = innerOuterRate;
+}
+
 
 
 
