@@ -124,7 +124,7 @@ void ThreadFromQThread::doSomething()
 - 在UI线程调用`QThread::terminate`函数会不会停止线程？
 - **如何正确的退出线程？**
 
-#2.2 QThread的几个函数quit、exit、terminate函数
+# 2.2 QThread的几个函数quit、exit、terminate函数
 
 为了验证上面这些，编写一个简单的界面如下图所示：
 
