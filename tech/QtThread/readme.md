@@ -1,4 +1,5 @@
 [TOC]
+#Qt使用多线程的一些心得——1.继承QThread的多线程使用方法
 
 # 1.摘要
 Qt有两种多线程的方法，其中一种是继承QThread的run函数，另外一种是把一个继承于QObject的类转移到一个Thread里。
@@ -588,3 +589,397 @@ void Widget::onButtonQThreadClicked()
 
 [--> 见 github ](https://github.com/czyt1988/czyBlog/tree/master/tech/QtThread)
 
+
+#Qt使用多线程的一些心得——2.继承QObject的多线程使用方法
+
+现在Qt官方并不是很推荐继承`QThread`来实现多线程方法，而是极力推崇继承`QObject`的方法来实现，当然用哪个方法实现要视情况而定，别弄错了就行，估计Qt如此推崇继承`QObject`的方法可能是`QThread`太容易用错的原因。
+
+
+#前言
+
+上一篇介绍了传统的多线程使用方法——继承`QThread`来实现多线程，这也是很多框架的做法(MFC),但Qt还有一种多线程的实现方法，比直接继承`QThread`更为灵活，就是直接继承`QObject`实现多线程。
+
+`QObject`是Qt框架的基本类，但凡涉及到信号槽有关的类都是继承于`QObject`。`QObject`是一个功能异常强大的类，它提供了Qt关键技术信号和槽的支持以及事件系统的支持，同时它提供了线程操作的接口，也就是`QObject`是可以选择不同的线程里执行的。
+
+`QObject`的线程转移函数是：`void moveToThread(QThread * targetThread)` ，通过此函数可以把一个**顶层Object（就是没有父级）**转移到一个新的线程里。
+
+`QThread`非常容易被新手误用，主要是`QThread`自身并不生存在它`run`函数所在的线程，而是生存在旧的线程中，此问题在上一篇重点描述了。由于QThread的这个特性，导致在调用`QThread`的非`run`函数容易在旧线程中执行，因此人们发现了一个新的魔改`QThread`的方法：
+人们发现，咦，`QThread`也继承`QObject`，`QObject`有个函数`void moveToThread(QThread * targetThread)`可以把Object的运行线程转移，那么：(**下面是非常不推荐的魔改做法，别用此方法**)：
+```cpp
+class MyThread : public QThread{
+public:
+    MyThread ()
+   {
+        moveToThread(this);
+   }
+……
+};
+```
+直接把MyThread整个转移到MyThread的新线程中，`MyThread`不仅`run`,其它函数也在新线程里了。这样的确可以运行正常，但这并不是`QThread`设计的初衷，Qt还专门发过一篇文章来吐槽这个做法。
+
+在Qt4.8之后，Qt多线程的写法最好还是通过`QObject`来实现，和线程的交互通过信号和槽(实际上其实是通过事件)联系。
+
+#继承QObject的多线程实现
+
+用`QObject`来实现多线程有个非常好的优点，就是默认就支持事件循环（Qt的许多非GUI类也需要事件循环支持，如`QTimer`、`QTcpSocket`），`QThread`要支持事件循环需要在`QThread::run()`中调用`QThread::exec()`来提供对消息循环的支持，否则那些需要事件循环支持的类都不能正常发送信号，因此如果要使用信号和槽，那就直接使用`QObject`来实现多线程。
+
+看看Qt官方文档的例子：
+```cpp
+class Worker : public QObject
+{
+    Q_OBJECT
+
+public slots:
+    void doWork(const QString &parameter) {
+        QString result;
+        /* ... here is the expensive or blocking operation ... */
+        emit resultReady(result);
+    }
+
+signals:
+    void resultReady(const QString &result);
+};
+
+class Controller : public QObject
+{
+    Q_OBJECT
+    QThread workerThread;
+public:
+    Controller() {
+        Worker *worker = new Worker;
+        worker->moveToThread(&workerThread);
+        connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+        connect(this, &Controller::operate, worker, &Worker::doWork);
+        connect(worker, &Worker::resultReady, this, &Controller::handleResults);
+        workerThread.start();
+    }
+    ~Controller() {
+        workerThread.quit();
+        workerThread.wait();
+    }
+public slots:
+    void handleResults(const QString &);
+signals:
+    void operate(const QString &);
+};
+```
+使用`QObject`创建多线程的方法如下：
+- 写一个继承`QObject`的类，**对需要进行复杂耗时逻辑的入口函数声明为槽函数**
+- 此类在旧线程new出来，**不能给它设置任何父对象**
+- 同时声明一个`QThread`对象，在官方例子里，`QThread`并没有`new`出来，**这样在析构时就需要调用`QThread::wait()`**，如果是堆分配的话， 可以通过`deleteLater`来让线程自杀
+- 把obj通过`moveToThread`方法转移到新线程中，此时object已经是在线程中了
+- 把线程的`finished`信号和object的`deleteLater`槽连接，这个信号槽必须连接，否则会内存泄漏
+- 正常连接其他信号和槽（**在连接信号槽之前调用`moveToThread`，不需要处理`connect`的第五个参数，否则就显示声明用Qt::QueuedConnection来连接**）
+- 初始化完后调用'QThread::start()'来启动线程
+- 在逻辑结束后，调用`QThread::quit`退出线程的事件循环
+
+使用`QObject`来实现多线程比用继承`QThread`的方法更加灵活，整个类都是在新的线程中，通过信号槽和主线程传递数据，前篇文章的例子用继承`QObject`的方法实现的话，代码如下：
+头文件(ThreadObject.h)：
+```cpp
+#include <QObject>
+#include <QMutex>
+class ThreadObject : public QObject
+{
+    Q_OBJECT
+public:
+    ThreadObject(QObject* parent = NULL);
+    ~ThreadObject();
+    void setRunCount(int count);
+    void stop();
+signals:
+    void message(const QString& info);
+    void progress(int present);
+public slots:
+    void runSomeBigWork1();
+    void runSomeBigWork2();
+private:
+    int m_runCount;
+    int m_runCount2;
+    bool m_isStop;
+
+    QMutex m_stopMutex;
+};
+```
+
+cpp文件(ThreadObject.cpp)：
+```cpp
+#include "ThreadObject.h"
+#include <QThread>
+#include <QDebug>
+#include <QMutexLocker>
+#include <QElapsedTimer>
+#include <limits>
+ThreadObject::ThreadObject(QObject *parent):QObject(parent)
+  ,m_runCount(10)
+  ,m_runCount2(std::numeric_limits<int>::max())
+  ,m_isStop(true)
+{
+
+}
+
+ThreadObject::~ThreadObject()
+{
+    qDebug() << "ThreadObject destroy";
+    emit message(QString("Destroy %1->%2,thread id:%3").arg(__FUNCTION__).arg(__FILE__).arg((int)QThread::currentThreadId()));
+}
+
+void ThreadObject::setRunCount(int count)
+{
+    m_runCount = count;
+    emit message(QString("%1->%2,thread id:%3").arg(__FUNCTION__).arg(__FILE__).arg((int)QThread::currentThreadId()));
+}
+
+void ThreadObject::runSomeBigWork1()
+{
+    {
+        QMutexLocker locker(&m_stopMutex);
+        m_isStop = false;
+    }
+    int count = 0;
+    QString str = QString("%1->%2,thread id:%3").arg(__FILE__).arg(__FUNCTION__).arg((int)QThread::currentThreadId());
+    emit message(str);
+    int process = 0;
+    while(1)
+    {
+        {
+            QMutexLocker locker(&m_stopMutex);
+            if(m_isStop)
+                return;
+        }
+        if(m_runCount == count)
+        {
+            break;
+        }
+        sleep(1);
+        int pro = ((float)count / m_runCount) * 100;
+        if(pro != process)
+        {
+            process = pro;
+            emit progress(((float)count / m_runCount) * 100);
+            emit message(QString("Object::run times:%1,m_runCount:%2").arg(count).arg(m_runCount2));
+        }
+        ++count;
+    }
+}
+
+void ThreadObject::runSomeBigWork2()
+{
+    {
+        QMutexLocker locker(&m_stopMutex);
+        m_isStop = false;
+    }
+    int count = 0;
+    QString str = QString("%1->%2,thread id:%3").arg(__FILE__).arg(__FUNCTION__).arg((int)QThread::currentThreadId());
+    emit message(str);
+    int process = 0;
+    QElapsedTimer timer;
+    timer.start();
+    while(1)
+    {
+        {
+            QMutexLocker locker(&m_stopMutex);
+            if(m_isStop)
+                return;
+        }
+        if(m_runCount2 == count)
+        {
+            break;
+        }
+        int pro = ((float)count / m_runCount2) * 100;
+        if(pro != process)
+        {
+            process = pro;
+            emit progress(pro);
+            emit message(QString("%1,%2,%3,%4")
+                         .arg(count)
+                         .arg(m_runCount2)
+                         .arg(pro)
+                         .arg(timer.elapsed()));
+            timer.restart();
+        }
+        ++count;
+    }
+}
+
+void ThreadObject::stop()
+{
+    QMutexLocker locker(&m_stopMutex);
+    emit message(QString("%1->%2,thread id:%3").arg(__FUNCTION__).arg(__FILE__).arg((int)QThread::currentThreadId()));
+    m_isStop = true;
+}
+
+```
+这个Object有两个耗时函数work1和work2，这两个耗时函数的调用都是通过槽函数触发，同时为了能及时打断线程，添加了一个stop函数，stop函数不是通过信号槽触发，因此需要对数据进行保护，这里用了互斥锁对一个bool变量进行了保护处理，当然会失去一些性能。
+
+
+主界面的头文件(截取部分代码)：
+
+```cpp
+#include <QWidget>
+#include <QTimer>
+class ThreadFromQThread;
+class ThreadObject;
+namespace Ui {
+class Widget;
+}
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit Widget(QWidget *parent = 0);
+    ~Widget();
+signals:
+    void startObjThreadWork1();
+    void startObjThreadWork2();
+private slots:
+……
+    void onButtonObjectMove2ThreadClicked();
+    void onButtonObjectMove2Thread2Clicked();
+    void onButtonObjectQuitClicked();
+    void onButtonObjectThreadStopClicked();
+    
+
+
+    void progress(int val);
+    void receiveMessage(const QString& str);
+    void heartTimeOut();
+
+private：
+    void startObjThread(); 
+private:
+    Ui::Widget *ui;
+    ……
+    ThreadObject* m_obj;
+    QThread* m_objThread;
+
+};
+```
+
+cpp文件
+
+```cpp
+Widget::~Widget()
+{
+    qDebug() << "start destroy widget";
+   
+    if(m_objThread)
+    {
+        m_objThread->quit();
+    }
+    m_objThread->wait();
+    qDebug() << "end destroy widget";
+}
+
+//创建线程
+void Widget::startObjThread()
+{
+    if(m_objThread)
+    {
+        return;
+    }
+    m_objThread= new QThread();
+    m_obj = new ThreadObject();
+    m_obj->moveToThread(m_objThread);
+    connect(m_objThread,&QThread::finished,m_objThread,&QObject::deleteLater);
+    connect(m_objThread,&QThread::finished,m_obj,&QObject::deleteLater);
+    connect(this,&Widget::startObjThreadWork1,m_obj,&ThreadObject::runSomeBigWork1);
+    connect(this,&Widget::startObjThreadWork2,m_obj,&ThreadObject::runSomeBigWork2);
+    connect(m_obj,&ThreadObject::progress,this,&Widget::progress);
+    connect(m_obj,&ThreadObject::message,this,&Widget::receiveMessage);
+
+    m_objThread->start();
+}
+
+//调用线程的runSomeBigWork1
+void Widget::onButtonObjectMove2ThreadClicked()
+{
+    if(!m_objThread)
+    {
+        startObjThread();
+    }
+
+    emit startObjThreadWork1();//主线程通过信号换起子线程的槽函数
+
+    ui->textBrowser->append("start Obj Thread work 1");
+}
+//调用线程的runSomeBigWork2
+void Widget::onButtonObjectMove2Thread2Clicked()
+{
+    if(!m_objThread)
+    {
+        startObjThread();
+    }
+    emit startObjThreadWork2();//主线程通过信号换起子线程的槽函数
+
+    ui->textBrowser->append("start Obj Thread work 2");
+}
+
+//调用线程的中断
+void Widget::onButtonObjectThreadStopClicked()
+{
+    if(m_objThread)
+    {
+        if(m_obj)
+        {
+            m_obj->stop();
+        }
+    }
+}
+```
+创建线程和官方例子差不多，区别是`QThread`也是用堆分配，这样，让QThread自杀的槽就一定记得加上，否则`QThread`就逍遥法外了。
+```cpp
+connect(m_objThread,&QThread::finished,m_objThread,&QObject::deleteLater);
+```
+#加了锁对性能有多大的影响
+上例的`runSomeBigWork2`中，让一个int不停自加1，一直加到int的最大值,为了验证加锁和不加锁的影响，这里对加锁和不加锁运行了两次观察耗时的变化
+```cpp
+void ThreadObject::runSomeBigWork2()
+{
+    {
+        QMutexLocker locker(&m_stopMutex);
+        m_isStop = false;
+    }
+    int count = 0;
+    QString str = QString("%1->%2,thread id:%3").arg(__FILE__).arg(__FUNCTION__).arg((int)QThread::currentThreadId());
+    emit message(str);
+    int process = 0;
+    QElapsedTimer timer;
+    timer.start();
+    while(1)
+    {
+        {
+            QMutexLocker locker(&m_stopMutex);
+            if(m_isStop)
+                return;
+        }
+        if(m_runCount2 == count)
+        {
+            break;
+        }
+        int pro = ((float)count / m_runCount2) * 100;
+        if(pro != process)
+        {
+            process = pro;
+            emit progress(pro);
+            emit message(QString("%1,%2,%3,%4")
+                         .arg(count)
+                         .arg(m_runCount2)
+                         .arg(pro)
+                         .arg(timer.elapsed()));
+            timer.restart();
+        }
+        ++count;
+    }
+}
+```
+
+结果如下：
+
+ ![](https://github.com/czyt1988/czyBlog/raw/master/tech/QtThread/pic/mutexCost.png)
+
+
+这里没个横坐标的每%1进行了21474837次循环，由统计图可见，Debug模式下使用了锁后性能下降4倍，Release模式下下降1.5倍的样子
+
+ 

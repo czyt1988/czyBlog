@@ -23,7 +23,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -105,17 +105,30 @@
         <string>QObject-&gt;moveToThread run</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButton_objQuit">
+      <widget class="QPushButton" name="pushButton_qobjectStop">
        <property name="geometry">
         <rect>
-         <x>140</x>
-         <y>80</y>
-         <width>161</width>
+         <x>80</x>
+         <y>120</y>
+         <width>191</width>
          <height>25</height>
         </rect>
        </property>
        <property name="text">
-        <string>obj quit</string>
+        <string>stop from widget</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_qobjectStart_2">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>60</y>
+         <width>221</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>QObject-&gt;moveToThread run2</string>
        </property>
       </widget>
      </widget>

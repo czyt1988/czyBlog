@@ -36,8 +36,10 @@ Widget::Widget(QWidget *parent) :
     //
     connect(ui->pushButton_qobjectStart,&QPushButton::clicked
             ,this,&Widget::onButtonObjectMove2ThreadClicked);
-    connect(ui->pushButton_objQuit,&QPushButton::clicked
-            ,this,&Widget::onButtonObjectQuitClicked);
+    connect(ui->pushButton_qobjectStart_2,&QPushButton::clicked
+            ,this,&Widget::onButtonObjectMove2Thread2Clicked);
+    connect(ui->pushButton_qobjectStop,&QPushButton::clicked
+            ,this,&Widget::onButtonObjectThreadStopClicked);
     //
     connect(&m_heart,&QTimer::timeout,this,&Widget::heartTimeOut);
     m_heart.setInterval(100);
@@ -66,6 +68,12 @@ Widget::~Widget()
     }
     m_thread->wait();
     delete ui;
+
+    if(m_objThread)
+    {
+        m_objThread->quit();
+    }
+    m_objThread->wait();
     qDebug() << "end destroy widget";
 }
 
@@ -166,40 +174,60 @@ void Widget::onLocalThreadDestroy(QObject *obj)
     }
 }
 
-void Widget::onButtonObjectMove2ThreadClicked()
+void Widget::startObjThread()
 {
     if(m_objThread)
     {
-        m_objThread->disconnect(m_objThread,&QThread::finished,this,&Widget::threadFinish);
-        m_objThread->quit();
+        return;
     }
     m_objThread= new QThread();
     m_obj = new ThreadObject();
     m_obj->moveToThread(m_objThread);
-    connect(m_objThread,&QThread::finished,this,&Widget::threadFinish);
     connect(m_objThread,&QThread::finished,m_objThread,&QObject::deleteLater);
     connect(m_objThread,&QThread::finished,m_obj,&QObject::deleteLater);
-    connect(this,&Widget::startObjThread,m_obj,&ThreadObject::runSomeBigWork);
+    connect(this,&Widget::startObjThreadWork1,m_obj,&ThreadObject::runSomeBigWork1);
+    connect(this,&Widget::startObjThreadWork2,m_obj,&ThreadObject::runSomeBigWork2);
     connect(m_obj,&ThreadObject::progress,this,&Widget::progress);
     connect(m_obj,&ThreadObject::message,this,&Widget::receiveMessage);
+
     m_objThread->start();
-    emit startObjThread();
-    ui->textBrowser->append("start Obj Thread");
 }
 
-void Widget::onButtonObjectQuitClicked()
+void Widget::onButtonObjectMove2ThreadClicked()
+{
+    if(!m_objThread)
+    {
+        startObjThread();
+    }
+
+    emit startObjThreadWork1();//主线程通过信号换起子线程的槽函数
+
+    ui->textBrowser->append("start Obj Thread work 1");
+}
+
+void Widget::onButtonObjectMove2Thread2Clicked()
+{
+    if(!m_objThread)
+    {
+        startObjThread();
+    }
+    emit startObjThreadWork2();//主线程通过信号换起子线程的槽函数
+
+    ui->textBrowser->append("start Obj Thread work 2");
+}
+
+
+void Widget::onButtonObjectThreadStopClicked()
 {
     if(m_objThread)
     {
-        m_objThread->disconnect(m_objThread,&QThread::finished,this,&Widget::threadFinish);
-        m_objThread->quit();
-        m_objThread = NULL;
-        m_obj = NULL;
+        if(m_obj)
+        {
+            m_obj->stop();
+        }
     }
 }
 
-void Widget::threadFinish()
-{
-    m_objThread = NULL;
-    m_obj = NULL;
-}
+
+
+

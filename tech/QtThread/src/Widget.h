@@ -17,7 +17,8 @@ public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
 signals:
-    void startObjThread();
+    void startObjThreadWork1();
+    void startObjThreadWork2();
 private slots:
     void onButtonQThreadClicked();
     void onButtonQthread1SetSomethingClicked();
@@ -32,8 +33,9 @@ private slots:
     void onLocalThreadDestroy(QObject* obj);
 
     void onButtonObjectMove2ThreadClicked();
-    void onButtonObjectQuitClicked();
-    void threadFinish();
+    void onButtonObjectMove2Thread2Clicked();
+    void onButtonObjectThreadStopClicked();
+    void startObjThread();
 
 
 
