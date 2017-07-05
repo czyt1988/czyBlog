@@ -18,3 +18,5 @@ SOURCES += main.cpp\
 HEADERS  += Widget.h
 
 FORMS    += Widget.ui
+
+OTHER_FILES += $$PWD/../readme.md
