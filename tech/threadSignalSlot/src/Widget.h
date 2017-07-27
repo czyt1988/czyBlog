@@ -27,7 +27,6 @@ class Widget : public QWidget
 public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
-    void readData(QByteArray simulateData);
 signals:
     void signalData(const int& a,unsigned int aAddress);
 private slots:
@@ -38,8 +37,6 @@ private slots:
 private:
     Ui::Widget *ui;
     TestThread* m_thread;
-    QByteArray receiveData;
-    int receiveIndex;
 };
 
 #endif // WIDGET_H

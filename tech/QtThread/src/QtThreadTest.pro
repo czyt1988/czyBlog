@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2016-11-18T11:17:31
+# Project created by QtCreator 2017-03-08T14:17:28
 #
 #-------------------------------------------------
 
@@ -8,15 +8,17 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = threadSignalSlot
+TARGET = QtThreadTest
 TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        Widget.cpp
+        Widget.cpp \
+    ThreadFromQThread.cpp \
+    ThreadObject.cpp
 
-HEADERS  += Widget.h
+HEADERS  += Widget.h \
+    ThreadFromQThread.h \
+    ThreadObject.h
 
 FORMS    += Widget.ui
-
-OTHER_FILES += $$PWD/../readme.md
