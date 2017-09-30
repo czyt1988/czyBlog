@@ -20,6 +20,7 @@
 
 [QRoundBar-圆形进度条的修正](https://github.com/czyt1988/czyBlog/tree/master/tech/QRoundBarFix)
 
+[解锁Qt属性表控件-QtPropertyBrowser](https://github.com/czyt1988/czyBlog/tree/master/tech/QtPropertyBrowser)
 
 ## IO相关
 

@@ -1,5 +1,9 @@
 # 简介
-用过Qt Creator的都会发现，Qt的ui designer有个很好看的属性设置控件，但此控件不在Qt的任何官方文档有提及，在github里有这个工具的地址：[QtPropertyBrowser on github](https://github.com/commontk/QtPropertyBrowser)
+用过Qt Creator的都会发现，Qt的ui designer有个很好看的属性设置控件
+
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QtPropertyBrowser/pic/00.png)
+
+但此控件不在Qt的任何官方文档有提及，在github里有这个工具的地址：[QtPropertyBrowser on github](https://github.com/commontk/QtPropertyBrowser)
 这里还有这个控件的介绍
 [doc.qt.io 关于QtPropertyBrowser的介绍](http://doc.qt.io/archives/qq/qq18-propertybrowser.html)
 之前我也写过一篇blog介绍过[Qt属性表控件的使用 QtTreePropertyBrowser](http://blog.csdn.net/czyt1988/article/details/42423613)
