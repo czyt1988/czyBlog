@@ -28,6 +28,9 @@
 
 [Windows下快速读取Excel](https://github.com/czyt1988/czyBlog/tree/master/tech/fastReadExcel)
 
+## 奇怪的错误记录
+
+[QScopedPointer forward_declared编译错误](https://github.com/czyt1988/czyBlog/tree/master/tech/QScopedPointer_forward_declared)
 
 # C++
 
