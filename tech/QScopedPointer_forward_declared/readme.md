@@ -1,4 +1,4 @@
-# 记录一个QScopedPointer forward declared 的错误提示
+# 记录一个QScopedPointer forward declared 的编译错误
 
 使用QScopedPointer内包含一个前置声明的变量时，仍然发生一个编译错误
 
@@ -28,7 +28,7 @@ struct QScopedPointerDeleter
 };
 ```
 
-上面注释很明确说了需要进行前置声明，但我明明已经进行了前置声明了，仍然会有这个编译错误
+上面注释很明确说了需要进行前置声明，但我明明已经进行了前置声明了，仍然会有这个编译错误：
 
 ```cpp
 class SASelectRegionEditorPrivate;
@@ -46,7 +46,7 @@ public:
 
 明明已经有`class SASelectRegionEditorPrivate;`但还是出现这个编译错误
 
-后来折腾来折腾去，最后发现，居然把××虚析构函数加上就可以编译通过××： 
+后来折腾来折腾去，最后发现，居然把**虚析构函数加上就可以编译通过**： 
 
 ```cpp
 class SASelectRegionEditorPrivate;
@@ -63,3 +63,4 @@ public:
     ...
 ```
 
+原因解决但不明白原理
