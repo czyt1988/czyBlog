@@ -1,4 +1,4 @@
-#ifndef WIDGET_H
+﻿#ifndef WIDGET_H
 #define WIDGET_H
 #include <QtCharts>
 using namespace QtCharts;
@@ -21,8 +21,12 @@ public:
 private slots:
     void on_pushButton_plot_clicked();
 
+
+    void on_checkBoxQtChartSetAnimation_clicked(bool checked);
+
 private:
     Ui::Widget *ui;
+    QChart* m_qtChart;
 };
 
 #endif // WIDGET_H

@@ -1,4 +1,4 @@
-#include "widget.h"
+﻿#include "widget.h"
 #include "ui_widget.h"
 #include <QChart>
 #include <QValueAxis>
@@ -12,6 +12,10 @@ Widget::Widget(QWidget *parent) :
 {
     ui->setupUi(this);
     initQtChart();
+    ui->splitterTop->setStretchFactor(0,3);
+    ui->splitterTop->setStretchFactor(1,1);
+    ui->splitterQtChart->setStretchFactor(0,1);
+    ui->splitterQtChart->setStretchFactor(1,3);
 }
 
 Widget::~Widget()
@@ -21,12 +25,7 @@ Widget::~Widget()
 
 void Widget::plotQtChart()
 {
-    QChart* chart = ui->qtChart->chart();
-    if(!chart)
-    {
-        chart = new QChart();
-        ui->qtChart->setChart(chart);
-    }
+    QChart* chart = m_qtChart;
     QValueAxis * axisX = qobject_cast<QValueAxis *>(chart->axisX());
     QValueAxis * axisY = qobject_cast<QValueAxis *>(chart->axisY());
     QLineSeries* line = NULL;
@@ -64,6 +63,7 @@ void Widget::initQtChart()
     chart->addAxis(axisX, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->legend()->hide();
+    m_qtChart = chart;
 }
 
 void Widget::on_pushButton_plot_clicked()
@@ -72,4 +72,11 @@ void Widget::on_pushButton_plot_clicked()
     timer.start();
     plotQtChart();
     qDebug()<<timer.elapsed();
+}
+
+
+
+void Widget::on_checkBoxQtChartSetAnimation_clicked(bool checked)
+{
+    m_qtChart->setAnimationOptions(checked ? QChart::AllAnimations : QChart::NoAnimation);
 }
