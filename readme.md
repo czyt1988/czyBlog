@@ -38,6 +38,8 @@
 
 [C++11的数据类型检查](https://github.com/czyt1988/czyBlog/tree/master/tech/typeCheck)
 
+[lambda陷阱](https://github.com/czyt1988/czyBlog/tree/master/tech/lambda_ref_trap)
+
 # 算法
 
 ## 号处理
