@@ -6,6 +6,7 @@
 #include <math.h>
 #include <QElapsedTimer>
 #include <QDebug>
+#include <math.h>
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
@@ -28,26 +29,18 @@ void Widget::plotQtChart()
     QChart* chart = m_qtChart;
     QValueAxis * axisX = qobject_cast<QValueAxis *>(chart->axisX());
     QValueAxis * axisY = qobject_cast<QValueAxis *>(chart->axisY());
-    QLineSeries* line = NULL;
-    if(chart->series().size()>0)
-    {
-        line = qobject_cast<QLineSeries*>(chart->series().at(0));
-    }
-    else
-    {
-        line = new QLineSeries;
-    }
+    QLineSeries* line = new QLineSeries;
     line->setUseOpenGL(true);
+    QVector<QPointF> points;
+    qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+    for(int i=0;i<320000;++i)
+    {
+        points.append(QPointF(i,qrand()));
+    }
+    line->replace(points);
     chart->addSeries(line);
     line->attachAxis(axisX);
     line->attachAxis(axisY);
-
-    QVector<QPointF> points;
-    for(int i=0;i<320000;++i)
-    {
-        points.append(QPointF(i,sin(i)));
-    }
-    line->replace(points);
 }
 
 void Widget::initQtChart()
@@ -63,6 +56,7 @@ void Widget::initQtChart()
     chart->addAxis(axisX, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->legend()->hide();
+
     m_qtChart = chart;
 }
 
