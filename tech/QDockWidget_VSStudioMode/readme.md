@@ -3,7 +3,7 @@
 许多工程软件，如Qt Creator，VS，matlab等，都是使用dock布局窗口，这样用户可以自定义界面，自由组合窗口。
 Qt的嵌套布局由QDockWidget完成，用Qt Creator拖界面得到的dock布置形式比较固定，不能得想要的任意组合形式，要得到如下图所示的效果，后续布局必须通过代码来完成。 
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/1.gif)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/1.gif)
 
 ps:这是自己没事写的一个数据可视化软件
 下面说说如何实现完全自由的界面布局效果：
@@ -52,7 +52,7 @@ void QMainWindow::setDockNestingEnabled(bool enabled)
 下面通过例子来讲解如何设置复杂的嵌套布局
 先用Qt Creator拖放9个dock进视图里，为了好区分，给每个dock设置一个背景颜色： 
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/2.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/2.png)
 
 dock属性随便设置，保证都任意区域可以停靠即可
 由于这里不需要MainWindow的中间窗口，整个视图都由dock组成，因此先把QMainWindow的中间窗口部件去除：
@@ -66,7 +66,7 @@ QWidget* p = takeCentralWidget();
 
 编译出来的效果如图所示： 
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/3.gif)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/3.gif)
 
 拖动dock可以发现，只能在两边进行组合，我想把dock放置到中间是无法实现的，这是由于为了简化dock的吸附，QMainWindow默认是把dock嵌套关闭的，需要我们手动设置，在MainWindow的构造函数里添加：
 
@@ -76,7 +76,7 @@ setDockNestingEnabled(true);
 
 即可打开嵌套功能，这时编译出来的窗口能实现如下嵌套：
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/4.gif)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/4.gif)
 
 此时，整个窗口的布局将变得非常灵活且复杂，由于Qt Creator在ui编辑器中无法像编译出来的程序那样任意调整位置，因此需要手动对窗口进行设置。下面将介绍如何用代码设置复杂的dock
 为了方便，添加两个函数和一个成员变量：
@@ -177,7 +177,7 @@ addDockWidget(Qt::BottomDockWidgetArea,ui->dockWidget_4);
 
 把4个dock按照上下左右布置，效果如下：
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/5.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/5.png)
 
 ## splitDockWidget
 
@@ -200,7 +200,7 @@ showDock(QList<int>()<< 0<<1<<2<<3<<4);
 
 得到如下效果：
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/6.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/6.png)
 
 若是：
 
@@ -216,14 +216,14 @@ showDock(QList<int>()<< 0<<1<<2<<3<<4);
 
 那么效果变为：
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/7.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/7.png)
 
 此函数是实现嵌套布局的关键，首先指定基准，然后开始进行分割，即可得到比较复杂的布局。
 分割原则是：**先水平，再竖直，从左到右，从上到下**
 
 下面显示一个九宫格布局： 
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/8.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/8.png)
 
 实现代码
 
@@ -242,7 +242,7 @@ splitDockWidget(ui->dockWidget_6,ui->dockWidget_9,Qt::Vertical);
 showDock();
 ```
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/9.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/9.png)
 
 ```cpp
 removeAllDock();
@@ -257,7 +257,7 @@ splitDockWidget(ui->dockWidget_6,ui->dockWidget_9,Qt::Vertical);
 showDock(QList<int>()<< 0<<1<<2<<3<<5<<6<<8);
 ```
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/10.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/10.png)
 
 实现代码：
 
@@ -280,7 +280,7 @@ showDock(QList<int>()<< 0<<1<<2<<3<<4<<5<<6);
 此函数就是实现tab合并功能
 直接看看下面例子： 
 
-![](https://github.com/czyt1988/czyBlog/raw/master/QDockWidget_VSStudioMode/pic/11.png)
+![](https://github.com/czyt1988/czyBlog/raw/master/tech/QDockWidget_VSStudioMode/pic/11.png)
 
 实现原理：
 
